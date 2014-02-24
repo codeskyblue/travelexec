@@ -83,7 +83,8 @@ type TaskResult struct {
 	Error     error
 }
 
-func work(cfg *TaskConfig) (results []TaskResult, err error) {
+func work(cfg *TaskConfig) (results []TaskResult) {
+	var err error
 	results = []TaskResult{}
 	for i, file := range cfg.Files {
 		start := time.Now()
@@ -91,7 +92,7 @@ func work(cfg *TaskConfig) (results []TaskResult, err error) {
 			StartTime: start.Format("15:04:05"),
 		}
 		c := strings.Replace(cfg.Command, cfg.Replacer, file, -1)
-		fmt.Printf("%d\t%s\t%s\n", i, file, c)
+		fmt.Printf(">>> %d\t%s\t%s\n", i, file, c)
 		output := bytes.NewBuffer(nil)
 		cmd := exec.Command("/bin/bash", "-c", c)
 		cmd.Stdout = io.MultiWriter(os.Stdout, output)
@@ -124,7 +125,7 @@ func main() {
 	taskcfg.Command = *command
 	taskcfg.Replacer = *replacer
 	taskcfg.Files = files
-	results, err := work(taskcfg)
+	results := work(taskcfg)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -133,8 +134,6 @@ func main() {
 		if r.Error != nil {
 			errCnt++
 		}
-		//println(r.Command)
-		//fmt.Println(string(r.Output))
 	}
 	startTime := time.Now()
 	data := map[string]interface{}{}
