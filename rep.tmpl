@@ -19,24 +19,27 @@
 				</dl>
 			</div>
 		</div>
+		{{range .Tasks}}
 		<div class="body case-list">
 			<div class="case-detail success">
 				<dl>
 					<dt>start time: {{.StartTime}}</dt>
-					<dt>time cost: {{.TimeCose}}</dt>
+					<dt>time cost: {{.TimeCost}}</dt>
+					<dt>command: {{.Command}}</dt>
 				</dl>
 				<button class="btn btn-small view-source">view source</button>
 				<div class="source">
-					<pre>#include <iostream></pre>
+					<pre>{{.Source}}</pre>
 				</div>
 				<button class="btn btn-small view-output">view output</button>
 				<div class="output">
-					<pre>hello world<iostream></pre>
+					<pre>{{.Output}}</pre>
 				</div>
 			</div>
 		</div>
+		{{end}}
 		<div class="footer">
-			&copy by <a href="https://github.com/shxsun">skyblue</a>
+			&copy author: <a href="https://github.com/shxsun">skyblue</a>
 		</div>
 	</body>
 </html>
