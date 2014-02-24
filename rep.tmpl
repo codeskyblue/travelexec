@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+	<head>
+        <meta charset="utf-8" />
+		<title>test_report</title>
+		<!--<link rel="stylesheet" type="text/css" href="http://dl.opqa.baidu.com/files/test-report/style.css" />-->
+		<link rel="stylesheet" type="text/css" href="style.css" />
+	</head>
+	<body>
+		<div class="header">
+			<h1>test report</h1>
+			<div class="summary">
+				<dl>
+					<dt>Start time: {{.StartTime}}</dt>
+					<dt>Time cost: {{.TimeCost}}</dt>
+					<dt>Fail count: {{.FailCount}}</dt>
+					<dt>Total: {{.Total}}</dt>
+					<dt>Run host: {{.Host}}</dt>
+				</dl>
+			</div>
+		</div>
+		<div class="body case-list">
+			<div class="case-detail success">
+				<dl>
+					<dt>start time: {{.StartTime}}</dt>
+					<dt>time cost: {{.TimeCose}}</dt>
+				</dl>
+				<button class="btn btn-small view-source">view source</button>
+				<div class="source">
+					<pre>#include <iostream></pre>
+				</div>
+				<button class="btn btn-small view-output">view output</button>
+				<div class="output">
+					<pre>hello world<iostream></pre>
+				</div>
+			</div>
+		</div>
+		<div class="footer">
+			&copy by <a href="https://github.com/shxsun">skyblue</a>
+		</div>
+	</body>
+</html>
