@@ -136,11 +136,12 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 			StartTime: start.Format("15:04:05"),
 		}
 		c := strings.Replace(cfg.Command, cfg.Replacer, file, -1)
-		prefix := fmt.Sprintf("\033[36m>>>\033[0m %-5d", i)
-		format := fmt.Sprintf(prefix+"%%-25v\t%-24s\n", c) //file) //file)
-		if *verbose {
-			fmt.Println(prefix+"call", strconv.Quote(file))
-		}
+
+		prefix := fmt.Sprintf("\r\033[36m>>>\033[0m %-5d", i)
+		format := fmt.Sprintf(prefix+"%%-30v    %-24s\n", c) //file) //file)
+		// show current exec file
+		fmt.Printf(prefix+"exec %s ...", strconv.Quote(file))
+
 		output := bytes.NewBuffer(nil)
 		cmd := exec.Command("/bin/bash", "-c", c)
 		if *verbose {
