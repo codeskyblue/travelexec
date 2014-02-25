@@ -189,6 +189,7 @@ func selfPath() string {
 func main() {
 	var err error
 	var taskcfg = &TaskConfig{}
+	var startTime = time.Now()
 	if *reload && fileExists(*resultJson) {
 		err = loadFile(*resultJson, taskcfg)
 		if err != nil {
@@ -213,15 +214,8 @@ func main() {
 			errfiles = append(errfiles, r.Filename)
 		}
 	}
-	// save to restart again
-	taskcfg.Files = errfiles
-	err = dumpFile(*resultJson, taskcfg)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	// reder html
-	startTime := time.Now()
 	data := map[string]interface{}{}
 	data["StartTime"] = startTime.Format("2006-01-02 15:04:05")
 	endTime := time.Now()
@@ -238,6 +232,13 @@ func main() {
 		ioutil.WriteFile(tmplPath, []byte(defaultTemplate), 0644)
 	}
 	err = renderTemplate(*resultHtml, tmplPath, data)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// save to restart again
+	taskcfg.Files = errfiles
+	err = dumpFile(*resultJson, taskcfg)
 	if err != nil {
 		log.Fatal(err)
 	}
