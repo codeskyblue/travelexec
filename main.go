@@ -6,6 +6,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
@@ -138,9 +139,12 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 		c := strings.Replace(cfg.Command, cfg.Replacer, file, -1)
 
 		prefix := fmt.Sprintf("\r\033[36m>>>\033[0m %-5d", i)
-		format := fmt.Sprintf(prefix+"%%-30v    %-24s\n", c) //file) //file)
+		format := fmt.Sprintf(prefix+"%%-14v %-24s\n", c) //file) //file)
 		// show current exec file
 		fmt.Printf(prefix+"exec %s ...", strconv.Quote(file))
+		if *verbose {
+			fmt.Printf("\n")
+		}
 
 		output := bytes.NewBuffer(nil)
 		cmd := exec.Command("/bin/bash", "-c", c)
@@ -176,6 +180,10 @@ func init() {
 func fileExists(filename string) bool {
 	fi, err := os.Stat(filename)
 	return err == nil && fi.Mode().IsRegular()
+}
+
+func selfPath() string {
+	return filepath.Dir(os.Args[0])
 }
 
 func main() {
@@ -224,7 +232,12 @@ func main() {
 	data["Total"] = len(taskcfg.Files)
 	data["FailCount"] = errCnt
 
-	err = renderTemplate(*resultHtml, "rep.tmpl", data)
+	tmplPath := filepath.Join(selfPath(), ".rep.tmpl")
+	if !fileExists(tmplPath) {
+		log.Println("create .rep.tmpl")
+		ioutil.WriteFile(tmplPath, []byte(defaultTemplate), 0644)
+	}
+	err = renderTemplate(*resultHtml, tmplPath, data)
 	if err != nil {
 		log.Fatal(err)
 	}
