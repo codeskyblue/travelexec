@@ -17,7 +17,7 @@ import (
 	"text/template"
 	"time"
 
-	"github.com/shxsun/flags"
+	"github.com/jessevdk/go-flags"
 	"github.com/shxsun/goyaml"
 )
 
@@ -94,7 +94,7 @@ type GlobalConfig struct {
 	Verbose  bool   `short:"v" long:"verbose" description:"show verbose output"`
 	Result   string `yaml:"report-html" short:"H" long:"out-html" description:"output result as html"`
 	Timeout  string `short:"t" long:"timeout" description:"timeout for each exec"`
-	Reload   bool   `short:"r" long:"reload" description:"reload all failed cmd, run again:`
+	Reload   bool   `short:"r" long:"reload" description:"reload all failed cmd, run again:"`
 	Exclude  string `yaml:"-"`
 
 	Version  bool `yaml:"-"`
@@ -120,10 +120,10 @@ func init() {
 	args, err := flags.Parse(mycnf)
 	_, _ = args, err
 	if err != nil {
-		/*if err == flags.ErrorType(flags.ErrHelp) {
+		if er, ok := err.(*flags.Error); ok && er.Type == flags.ErrHelp {
 			os.Exit(0)
-		} */
-		os.Exit(1)
+		}
+		log.Fatal(err)
 	}
 	if mycnf.InitYaml {
 		dumpFile(".travel.yml", mycnf)
