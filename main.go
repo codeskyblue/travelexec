@@ -2,9 +2,7 @@ package main
 
 import (
 	"bytes"
-	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -18,10 +16,13 @@ import (
 	"syscall"
 	"text/template"
 	"time"
+
+	"github.com/shxsun/flags"
+	"github.com/shxsun/goyaml"
 )
 
 func renderTemplate(filename string, tmplFile string, data interface{}) (err error) {
-	tmpl, err := template.ParseFiles("rep.tmpl")
+	tmpl, err := template.ParseFiles(tmplFile)
 	if err != nil {
 		return
 	}
@@ -35,23 +36,19 @@ func renderTemplate(filename string, tmplFile string, data interface{}) (err err
 }
 
 func dumpFile(filename string, data interface{}) (err error) {
-	fd, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-	err = json.NewEncoder(fd).Encode(data)
-	return
-}
-
-func loadFile(filename string, data interface{}) (err error) {
-	fd, err := os.Open(filename)
+	out, err := goyaml.Marshal(data)
 	if err != nil {
 		return
 	}
-	defer fd.Close()
-	err = json.NewDecoder(fd).Decode(data)
-	return
+	return ioutil.WriteFile(filename, out, 0644)
+}
+
+func loadFile(filename string, data interface{}) (err error) {
+	raw, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return
+	}
+	return goyaml.Unmarshal(raw, data)
 }
 
 func ignore(info os.FileInfo) bool {
@@ -79,7 +76,7 @@ func pathWalk(path string, depth int) (files []string, err error) {
 				return filepath.SkipDir
 			}
 		} else if info.Mode().IsRegular() && !ignore(info) {
-			if matched, _ := regexp.Match(*include, []byte(info.Name())); matched {
+			if matched, _ := regexp.Match(mycnf.Include, []byte(info.Name())); matched {
 				files = append(files, path)
 			}
 		}
@@ -88,22 +85,56 @@ func pathWalk(path string, depth int) (files []string, err error) {
 	return
 }
 
-var (
-	depth      = flag.Int("depth", 0, "depth of dir search")
-	path       = flag.String("path", "./", "root path")
-	replacer   = flag.String("r", "{}", "filename replacer")
-	command    = flag.String("c", "./{}", "spec how to run command")
-	resultHtml = flag.String("html", "test.html", "output html")
-	verbose    = flag.Bool("v", false, "show verbose info")
-	resultJson = flag.String("json", ".out.json", "output json")
-	timeout    = flag.Duration("timeout", time.Minute*30, "timeout for each exec")
+type GlobalConfig struct {
+	Replacer string `short:"i" description:"replacer"`
+	Command  string `short:"c" description:"specify how to process each file"`
+	Include  string `short:"I" long:"include-regex" description:"regex set which file can be included"`
+	Path     string `short:"p" long:"path" description:"path for search"`
+	Depth    int    `short:"d" long:"depth" description:"depth to travel directory tree"`
+	Verbose  bool   `short:"v" long:"verbose" description:"show verbose output"`
+	Result   string `yaml:"report-html" short:"H" long:"out-html" description:"output result as html"`
+	Timeout  string `short:"t" long:"timeout" description:"timeout for each exec"`
+	Reload   bool   `short:"r" long:"reload" description:"reload all failed cmd, run again:`
+	Exclude  string `yaml:"-"`
 
-	version = flag.Bool("version", false, "show version")
+	Version  bool `yaml:"-"`
+	InitYaml bool `yaml:"-" long:"init" description:"create a sample .trival.yml and exit"`
+}
 
-	include = flag.String("I", ".*", "regex to match include file")
-	//exclude = flag.String("x", "\\.*", "regex to exclude file")
-	reload = flag.Bool("reload", false, "reload failed file, and run again")
-)
+var mycnf = &GlobalConfig{
+	Depth:    0,
+	Path:     "./",
+	Replacer: "{}",
+	Version:  false,
+	Result:   "test.html",
+	Timeout:  "30m",
+	Command:  "./{}",
+	Include:  ".*",
+	Verbose:  false,
+}
+
+func init() {
+	if fileExists(".travel.yml") {
+		loadFile(".travel.yml", mycnf)
+	}
+	args, err := flags.Parse(mycnf)
+	_, _ = args, err
+	if err != nil {
+		/*if err == flags.ErrorType(flags.ErrHelp) {
+			os.Exit(0)
+		} */
+		os.Exit(1)
+	}
+	if mycnf.InitYaml {
+		dumpFile(".travel.yml", mycnf)
+		os.Exit(0)
+	}
+	if mycnf.Version {
+		fmt.Println(VERSION)
+		os.Exit(0)
+	}
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
+}
 
 type TaskConfig struct {
 	Replacer string
@@ -164,13 +195,13 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 		format := fmt.Sprintf(prefix+"%%-14v %-24s\n", c) //file) //file)
 		// show current exec file
 		fmt.Printf(prefix+"exec %s ...", strconv.Quote(file))
-		if *verbose {
+		if mycnf.Verbose {
 			fmt.Printf("\n")
 		}
 
 		output := bytes.NewBuffer(nil)
 		cmd := exec.Command("/bin/bash", "-c", c)
-		if *verbose {
+		if mycnf.Verbose {
 			cmd.Stdout = io.MultiWriter(os.Stdout, output)
 			cmd.Stderr = io.MultiWriter(os.Stderr, output)
 		} else {
@@ -209,15 +240,6 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 	return
 }
 
-func init() {
-	flag.Parse()
-	if *version {
-		fmt.Println(VERSION)
-		os.Exit(0)
-	}
-	log.SetFlags(log.LstdFlags | log.Lshortfile)
-}
-
 func fileExists(filename string) bool {
 	fi, err := os.Stat(filename)
 	return err == nil && fi.Mode().IsRegular()
@@ -227,23 +249,29 @@ func selfPath() string {
 	return filepath.Dir(os.Args[0])
 }
 
+const STATE_FILE = ".out.json"
+
 func main() {
 	var err error
 	var taskcfg = &TaskConfig{}
 	var startTime = time.Now()
-	if *reload && fileExists(*resultJson) {
-		err = loadFile(*resultJson, taskcfg)
+	if mycnf.Reload && fileExists(STATE_FILE) {
+		err = loadFile(STATE_FILE, taskcfg)
 		if err != nil {
 			log.Fatal(err)
 		}
 	} else {
-		files, err := pathWalk(*path, *depth)
+		files, err := pathWalk(mycnf.Path, mycnf.Depth)
 		if err != nil {
 			log.Fatal(err)
 		}
-		taskcfg.Command = *command
-		taskcfg.Replacer = *replacer
-		taskcfg.Timeout = *timeout
+		taskcfg.Command = mycnf.Command
+		taskcfg.Replacer = mycnf.Replacer
+		timeout, err := time.ParseDuration(mycnf.Timeout)
+		if err != nil {
+			log.Fatal(err)
+		}
+		taskcfg.Timeout = timeout
 		taskcfg.Files = files
 	}
 
@@ -273,14 +301,14 @@ func main() {
 		log.Println("create .rep.tmpl")
 		ioutil.WriteFile(tmplPath, []byte(defaultTemplate), 0644)
 	}
-	err = renderTemplate(*resultHtml, tmplPath, data)
+	err = renderTemplate(mycnf.Result, tmplPath, data)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// save to restart again
 	taskcfg.Files = errfiles
-	err = dumpFile(*resultJson, taskcfg)
+	err = dumpFile(STATE_FILE, taskcfg)
 	if err != nil {
 		log.Fatal(err)
 	}

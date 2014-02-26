@@ -1,0 +1,9 @@
+replacer: '{}'
+command: ./{}
+include: .*
+path: ./
+depth: 0
+verbose: false
+report-html: test.html
+timeout: 30m
+reload: false
