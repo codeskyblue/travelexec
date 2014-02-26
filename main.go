@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -106,6 +107,9 @@ var (
 	resultHtml = flag.String("html", "test.html", "output html")
 	verbose    = flag.Bool("v", false, "show verbose info")
 	resultJson = flag.String("json", ".out.json", "output json")
+	timeout    = flag.Duration("timeout", time.Minute*30, "timeout for each exec")
+
+	version = flag.Bool("version", false, "show version")
 
 	include = flag.String("I", ".*", "regex to match include file")
 	//exclude = flag.String("x", "\\.*", "regex to exclude file")
@@ -115,6 +119,7 @@ var (
 type TaskConfig struct {
 	Replacer string
 	Command  string
+	Timeout  time.Duration
 	Files    []string
 }
 
@@ -126,6 +131,15 @@ type TaskResult struct {
 	Output    string // console out
 	Source    string // source code
 	Error     error
+}
+
+func Go(f func() error) chan error {
+	ch := make(chan error)
+	go func() {
+		err := f()
+		ch <- err
+	}()
+	return ch
 }
 
 func work(cfg *TaskConfig) (results []TaskResult) {
@@ -155,7 +169,19 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 			cmd.Stdout = output
 			cmd.Stderr = output
 		}
-		err = cmd.Run()
+
+		// handle timeout
+		if err = cmd.Start(); err == nil {
+			select {
+			case <-time.After(cfg.Timeout):
+				if cmd.Process != nil {
+					cmd.Process.Kill()
+					err = errors.New("signal: terminated")
+				}
+			case err = <-Go(cmd.Wait):
+			}
+		}
+
 		if err != nil {
 			r.Error = err
 			fmt.Printf(format, fmt.Sprintf("\033[33m"+"err: %s"+"\033[0m", err))
@@ -174,6 +200,10 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 
 func init() {
 	flag.Parse()
+	if *version {
+		fmt.Println(VERSION)
+		os.Exit(0)
+	}
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 }
 
@@ -202,6 +232,7 @@ func main() {
 		}
 		taskcfg.Command = *command
 		taskcfg.Replacer = *replacer
+		taskcfg.Timeout = *timeout
 		taskcfg.Files = files
 	}
 
