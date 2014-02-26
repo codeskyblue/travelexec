@@ -15,6 +15,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"text/template"
 	"time"
 )
@@ -52,18 +53,6 @@ func loadFile(filename string, data interface{}) (err error) {
 	err = json.NewDecoder(fd).Decode(data)
 	return
 }
-
-func renderJson(filename string, data interface{}) (err error) {
-	fd, err := os.Create(filename)
-	if err != nil {
-		return err
-	}
-	defer fd.Close()
-	err = json.NewEncoder(fd).Encode(data)
-	return
-}
-
-//func saveText(filename string,
 
 func ignore(info os.FileInfo) bool {
 	if info.IsDir() {
@@ -142,6 +131,25 @@ func Go(f func() error) chan error {
 	return ch
 }
 
+func groupKill(cmd *exec.Cmd) (err error) {
+	var pid, pgid int
+	if cmd.Process != nil {
+		pid = cmd.Process.Pid
+		c := exec.Command("/bin/ps", "-o", "pgid", "-p", strconv.Itoa(pid), "--no-header")
+		var out []byte
+		out, err = c.Output()
+		if err != nil {
+			return
+		}
+		_, err = fmt.Sscanf(string(out), "%d", &pgid)
+		if err != nil {
+			return
+		}
+		err = exec.Command("/bin/kill", "-TERM", "-"+strconv.Itoa(pgid)).Run()
+	}
+	return
+}
+
 func work(cfg *TaskConfig) (results []TaskResult) {
 	var err error
 	results = []TaskResult{}
@@ -169,13 +177,16 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 			cmd.Stdout = output
 			cmd.Stderr = output
 		}
+		cmd.SysProcAttr = &syscall.SysProcAttr{}
+		cmd.SysProcAttr.Setpgid = true
 
 		// handle timeout
 		if err = cmd.Start(); err == nil {
 			select {
 			case <-time.After(cfg.Timeout):
 				if cmd.Process != nil {
-					cmd.Process.Kill()
+					//cmd.Process.Kill()
+					groupKill(cmd)
 					err = errors.New("signal: terminated")
 				}
 			case err = <-Go(cmd.Wait):
