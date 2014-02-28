@@ -35,7 +35,20 @@ func renderTemplate(filename string, tmplFile string, data interface{}) (err err
 	return
 }
 
-func renderWithDefault(filename string, tmplFile string, defaultTmpl []byte, data interface{}) (err error) {
+func renderWithDefault(tmplFile string, defaultTmpl []byte, data interface{}) (out string, err error) {
+	buf := &bytes.Buffer{}
+	if !fileExists(tmplFile) {
+		ioutil.WriteFile(tmplFile, defaultTmpl, 0644)
+	}
+	tmpl, err := template.ParseFiles(tmplFile)
+	if err != nil {
+		return
+	}
+	err = tmpl.Execute(buf, data)
+	return string(buf.Bytes()), err
+}
+
+func renderFileWithDefault(filename string, tmplFile string, defaultTmpl []byte, data interface{}) (err error) {
 	if !fileExists(tmplFile) {
 		ioutil.WriteFile(tmplFile, defaultTmpl, 0644)
 	}
@@ -293,6 +306,11 @@ func main() {
 		}
 		totCnt++
 	}
+	defer func() {
+		if errCnt != 0 {
+			os.Exit(13) // 13 is a lucky number
+		}
+	}()
 
 	// reder html
 	data := map[string]interface{}{}
@@ -305,10 +323,10 @@ func main() {
 	data["Total"] = len(taskcfg.Files)
 	data["FailCount"] = errCnt
 
-	tmplPath := filepath.Join(selfPath(), ".rep.tmpl")
+	tmplPath := filepath.Join(selfPath(), ".html.tmpl")
 	if !fileExists(tmplPath) {
 		log.Println("create .rep.tmpl")
-		ioutil.WriteFile(tmplPath, []byte(defaultTemplate), 0644)
+		ioutil.WriteFile(tmplPath, defaultTemplate, 0644)
 	}
 	err = renderTemplate(mycnf.Result, tmplPath, data)
 	if err != nil {
@@ -322,7 +340,15 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("summary: (total: %d fail: %d)\n", totCnt, errCnt)
-	if errCnt != 0 {
-		os.Exit(13) // 13 is a lucky number
+	smsTmplPath := filepath.Join(selfPath(), ".sms.tmpl")
+	if len(mycnf.Notify) != 0 {
+		msg, err := renderWithDefault(smsTmplPath, defaultSMSTemplate, data)
+		if err != nil {
+			log.Fatal(err)
+		}
+		err = sendNotify(msg, mycnf.Notify...)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 }

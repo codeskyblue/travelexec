@@ -1,6 +1,11 @@
 package main
 
-var defaultTemplate = `<!DOCTYPE html>
+var defaultSMSTemplate = []byte(`summary
+== total: {{.Total}} fail: {{.FailCount}} ==
+- host: {{.Host}}
+- time: {{.TimeCost}}`)
+
+var defaultTemplate = []byte(`<!DOCTYPE html>
 <html>
 	<head>
         <meta charset="utf-8" />
@@ -90,4 +95,4 @@ var defaultTemplate = `<!DOCTYPE html>
 		</script>
 	</body>
 </html>
-`
+`)
