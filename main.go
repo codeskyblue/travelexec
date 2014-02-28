@@ -35,6 +35,13 @@ func renderTemplate(filename string, tmplFile string, data interface{}) (err err
 	return
 }
 
+func renderWithDefault(filename string, tmplFile string, defaultTmpl []byte, data interface{}) (err error) {
+	if !fileExists(tmplFile) {
+		ioutil.WriteFile(tmplFile, defaultTmpl, 0644)
+	}
+	return renderTemplate(filename, tmplFile, data)
+}
+
 func dumpFile(filename string, data interface{}) (err error) {
 	out, err := goyaml.Marshal(data)
 	if err != nil {
@@ -97,8 +104,9 @@ type GlobalConfig struct {
 	Reload   bool   `short:"r" long:"reload" description:"reload all failed cmd, run again:"`
 	Exclude  string `yaml:"-"`
 
-	Version  bool `yaml:"-"`
-	InitYaml bool `yaml:"-" long:"init" description:"create a sample .trival.yml and exit"`
+	Version  bool     `yaml:"-"`
+	InitYaml bool     `yaml:"-" long:"init" description:"create a sample .trival.yml and exit"`
+	Notify   []string `yaml:"notify" long:"notify" description:"notify people when task finish"`
 }
 
 var mycnf = &GlobalConfig{
@@ -277,12 +285,13 @@ func main() {
 
 	results := work(taskcfg)
 	errfiles := []string{}
-	errCnt := 0
+	errCnt, totCnt := 0, 0
 	for _, r := range results {
 		if r.Error != nil {
 			errCnt++
 			errfiles = append(errfiles, r.Filename)
 		}
+		totCnt++
 	}
 
 	// reder html
@@ -311,5 +320,9 @@ func main() {
 	err = dumpFile(STATE_FILE, taskcfg)
 	if err != nil {
 		log.Fatal(err)
+	}
+	fmt.Printf("summary: (total: %d fail: %d)\n", totCnt, errCnt)
+	if errCnt != 0 {
+		os.Exit(13) // 13 is a lucky number
 	}
 }

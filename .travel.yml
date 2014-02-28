@@ -1,9 +1,11 @@
 replacer: '{}'
 command: ./{}
-include: .*
-path: ./
+include: .*\.sh
+path: ./testdata
 depth: 0
-verbose: false
+verbose: true
 report-html: test.html
-timeout: 30m
+timeout: 2s
 reload: false
+notify:
+- sunshengxiang01
