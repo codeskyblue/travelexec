@@ -270,7 +270,7 @@ func selfPath() string {
 	return filepath.Dir(os.Args[0])
 }
 
-const STATE_FILE = ".out.json"
+const STATE_FILE = ".saved-state.yml"
 
 func main() {
 	var err error
