@@ -323,15 +323,12 @@ func main() {
 	data["Total"] = len(taskcfg.Files)
 	data["FailCount"] = errCnt
 
-	tmplPath := filepath.Join(selfPath(), ".html.tmpl")
-	if !fileExists(tmplPath) {
-		log.Println("create .rep.tmpl")
-		ioutil.WriteFile(tmplPath, defaultTemplate, 0644)
-	}
-	err = renderTemplate(mycnf.Result, tmplPath, data)
+	htmlTmplPath := filepath.Join(selfPath(), ".html.tmpl")
+	err = renderFileWithDefault(mycnf.Result, htmlTmplPath, defaultTemplate, data)
 	if err != nil {
 		log.Fatal(err)
 	}
+	htmlData, _ := ioutil.ReadFile(mycnf.Result)
 
 	// save to restart again
 	taskcfg.Files = errfiles
@@ -346,7 +343,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		err = sendNotify(msg, mycnf.Notify...)
+		err = sendNotify(msg, htmlData, mycnf.Notify...)
 		if err != nil {
 			log.Fatal(err)
 		}

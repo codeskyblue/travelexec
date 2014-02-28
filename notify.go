@@ -48,12 +48,15 @@ func postForm(uri string, params map[string]string, files map[string][]byte) (er
 	return
 }
 
-func sendNotify(msg string, users ...string) (err error) {
+func sendNotify(msg string, data []byte, users ...string) (err error) {
 	params := map[string]string{
 		"username": strings.Join(users, ","),
 		"message":  msg,
 	}
-	err = postForm("http://localhost:8080", params, nil)
+	files := map[string][]byte{
+		"file": data,
+	}
+	err = postForm("http://localhost:8080", params, files)
 	if err != nil {
 		log.Fatal(err)
 	}
