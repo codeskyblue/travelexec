@@ -33,7 +33,7 @@ func postForm(uri string, params map[string]string, files map[string][]byte) (er
 	if err = w.Close(); err != nil {
 		return
 	}
-	//log.Println("boundary:", w.Boundary(), len(body.Bytes()))
+	log.Println("boundary:", w.Boundary(), len(body.Bytes()))
 	req, err := http.NewRequest("POST", uri, body)
 	if err != nil {
 		return
