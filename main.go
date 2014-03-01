@@ -21,6 +21,8 @@ import (
 	"github.com/shxsun/goyaml"
 )
 
+var quitProgram = false
+
 func renderTemplate(filename string, tmplFile string, data interface{}) (err error) {
 	tmpl, err := template.ParseFiles(tmplFile)
 	if err != nil {
@@ -209,8 +211,14 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 		start := time.Now()
 		r := TaskResult{
 			StartTime: start.Format("15:04:05"),
+			Filename:  file,
 		}
 		c := strings.Replace(cfg.Command, cfg.Replacer, file, -1)
+		r.Command = c
+		if quitProgram {
+			r.Error = errors.New("not started, skiped for SIGINT interrupt")
+			break
+		}
 
 		prefix := fmt.Sprintf("\r\033[36m>>>\033[0m %-5d", i)
 		format := fmt.Sprintf(prefix+"%%-14v %-24s\n", c) //file) //file)
@@ -235,12 +243,14 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 		// handle timeout
 		if err = cmd.Start(); err == nil {
 			select {
+			case <-sigC:
+				quitProgram = true
+				groupKill(cmd)
+				err = errors.New("signal: interrupt")
 			case <-time.After(cfg.Timeout):
-				if cmd.Process != nil {
-					//cmd.Process.Kill()
-					groupKill(cmd)
-					err = errors.New("signal: terminated")
-				}
+				//cmd.Process.Kill()
+				groupKill(cmd)
+				err = errors.New("signal: terminated")
 			case err = <-Go(cmd.Wait):
 			}
 		}
@@ -251,8 +261,6 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 		} else {
 			fmt.Printf(format, "\033[32m"+"success"+"\033[0m")
 		}
-		r.Command = c
-		r.Filename = file
 		r.TimeCost = time.Now().Sub(start)
 		r.Output = string(output.Bytes())
 		r.Source = "unfinished(todo)"
@@ -338,7 +346,7 @@ func main() {
 	}
 	fmt.Printf("summary: (total: %d fail: %d)\n", totCnt, errCnt)
 	smsTmplPath := filepath.Join(selfPath(), ".sms.tmpl")
-	if len(mycnf.Notify) != 0 {
+	if !quitProgram && len(mycnf.Notify) != 0 {
 		msg, err := renderWithDefault(smsTmplPath, defaultSMSTemplate, data)
 		if err != nil {
 			log.Fatal(err)

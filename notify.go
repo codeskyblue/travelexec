@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"strings"
@@ -40,7 +39,6 @@ func postForm(uri string, params map[string]string, files map[string][]byte) (er
 	var client http.Client
 	res, err := client.Do(req)
 	if err != nil {
-		log.Println(err)
 		return
 	}
 	defer res.Body.Close()
@@ -57,8 +55,5 @@ func sendNotify(msg string, data []byte, users ...string) (err error) {
 		"file": data,
 	}
 	err = postForm("http://localhost:8080", params, files)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return nil
+	return
 }
