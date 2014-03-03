@@ -54,6 +54,6 @@ func sendNotify(msg string, data []byte, users ...string) (err error) {
 	files := map[string][]byte{
 		"file": data,
 	}
-	err = postForm("http://localhost:8080", params, files)
+	err = postForm("http://10.48.57.33:8080", params, files)
 	return
 }

@@ -1,4 +1,3 @@
-replacer: '{}'
 command: ./{}
 include: .*\.sh
 path: ./testdata

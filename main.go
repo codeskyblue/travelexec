@@ -91,6 +91,7 @@ func pathWalk(path string, depth int) (files []string, err error) {
 	err = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			pathDepth := strings.Count(path, string(os.PathSeparator)) - baseNumSeps
+			// FIXME: there is bug here
 			if pathDepth > depth {
 				return filepath.SkipDir
 			}
@@ -108,7 +109,7 @@ func pathWalk(path string, depth int) (files []string, err error) {
 }
 
 type GlobalConfig struct {
-	Replacer string `short:"i" description:"replacer"`
+	Replacer string `yaml:"-"` //short:"i" description:"replacer"`
 	Command  string `short:"c" description:"specify how to process each file"`
 	Include  string `short:"I" long:"include-regex" description:"regex set which file can be included"`
 	Path     string `short:"p" long:"path" description:"path for search"`
