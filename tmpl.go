@@ -11,7 +11,6 @@ var defaultTemplate = []byte(`<!DOCTYPE html>
         <meta charset="utf-8" />
 		<title>travelexec report</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<link rel="stylesheet" type="text/css" href="style.css" />
 		<!-- Bootstrap -->
 		<link rel="stylesheet" href="http://cdn.bootcss.com/twitter-bootstrap/3.0.3/css/bootstrap.min.css">
 	</head>
