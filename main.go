@@ -217,6 +217,7 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 		r.Command = c
 		if quitProgram {
 			r.Error = errors.New("not started, skiped for SIGINT interrupt")
+			results = append(results, r)
 			break
 		}
 
