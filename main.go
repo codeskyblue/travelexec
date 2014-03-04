@@ -115,7 +115,7 @@ type GlobalConfig struct {
 	Path     string `short:"p" long:"path" description:"path for search"`
 	Depth    int    `short:"d" long:"depth" description:"depth to travel directory tree"`
 	Verbose  bool   `short:"v" long:"verbose" description:"show verbose output"`
-	Result   string `yaml:"report-html" short:"H" long:"out-html" description:"output result as html"`
+	Result   string `yaml:"html" long:"html" description:"output result as html"`
 	Timeout  string `short:"t" long:"timeout" description:"timeout for each exec"`
 	Reload   bool   `short:"r" long:"reload" description:"reload all failed cmd, run again:"`
 	Exclude  string `yaml:"-"`
