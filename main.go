@@ -87,11 +87,11 @@ func ignore(info os.FileInfo) bool {
 
 func pathWalk(path string, depth int) (files []string, err error) {
 	files = make([]string, 0)
+	path = filepath.Clean(path) // remove extra /
 	baseNumSeps := strings.Count(path, string(os.PathSeparator))
 	err = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			pathDepth := strings.Count(path, string(os.PathSeparator)) - baseNumSeps
-			// FIXME: there is bug here
 			if pathDepth > depth {
 				return filepath.SkipDir
 			}
