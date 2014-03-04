@@ -8,3 +8,4 @@ timeout: 2s
 reload: false
 notify:
 - sunshengxiang01
+- pankai01

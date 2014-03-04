@@ -48,8 +48,9 @@ func postForm(uri string, params map[string]string, files map[string][]byte) (er
 
 func sendNotify(msg string, data []byte, users ...string) (err error) {
 	params := map[string]string{
-		"username": strings.Join(users, ","),
+		"username": users[0], // for temp use
 		"message":  msg,
+		"notify":   strings.Join(users, ","),
 	}
 	files := map[string][]byte{
 		"file": data,
