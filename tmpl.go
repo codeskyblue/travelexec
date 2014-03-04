@@ -94,7 +94,7 @@ var defaultTemplate = []byte(`<!DOCTYPE html>
 		</script>
 		<script type="text/javascript">
 			var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
-			document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F7012226af2ddca603a64e61a9afc34a5' type='text/javascript'%3E%3C/script%3E"));
+			document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F16e2db098074d5cd3d1de938886dddbc' type='text/javascript'%3E%3C/script%3E"));
 		</script>
 	</body>
 </html>
