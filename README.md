@@ -46,9 +46,10 @@ this command will only run last failed test cases.
 add such command into **Execute Shell**
 
 	mkdir -p ${WORKSPACE}/travelrep
-	travelexec -html ${WORKSPACE}/travelrep/index.html
+	travelexec --html ${WORKSPACE}/travelrep/index.html
   
 Achieve HTML report. set base dir (travelrep), index file (index.html)
 
+if test failed, travelexec exitcode will be not 0.
 ### there are still a lot this README not metion about.
 use `travelexec -h` for more help.
