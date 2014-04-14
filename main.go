@@ -85,6 +85,10 @@ func ignore(info os.FileInfo) bool {
 	return false
 }
 
+func currPathCfg(path string) *GlobalConfig {
+	return mycnf
+}
+
 func pathWalk(path string, depth int) (files []string, err error) {
 	files = make([]string, 0)
 	path = filepath.Clean(path) // remove extra /
@@ -92,6 +96,11 @@ func pathWalk(path string, depth int) (files []string, err error) {
 	err = filepath.Walk(path, func(path string, info os.FileInfo, err error) error {
 		if info.IsDir() {
 			pathDepth := strings.Count(path, string(os.PathSeparator)) - baseNumSeps
+			cfgPath := filepath.Join(path, CONFIG_FILE)
+			if fileExists(cfgPath) {
+				localCfg := mycnf
+				loadFile(cfgPath, localCfg)
+			}
 			if pathDepth > depth {
 				return filepath.SkipDir
 			}
@@ -280,12 +289,19 @@ func selfPath() string {
 	return filepath.Dir(os.Args[0])
 }
 
-const STATE_FILE = ".saved-state.yml"
+const STATE_FILE = ".run-state.yml"
+const CONFIG_FILE = ".travel.yml"
+
+var cfgTree = map[string]*GlobalConfig{}
 
 func main() {
 	var err error
 	var taskcfg = &TaskConfig{}
 	var startTime = time.Now()
+
+	cfgPath := filepath.Join(mycnf.Path, CONFIG_FILE)
+	loadFile(cfgPath, mycnf)
+
 	if mycnf.Reload && fileExists(STATE_FILE) {
 		err = loadFile(STATE_FILE, taskcfg)
 		if err != nil {

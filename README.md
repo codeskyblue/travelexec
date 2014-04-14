@@ -1,5 +1,4 @@
 ## travelexec
-[![Gobuild Download](http://gobuild.io/badge/github.com/shxsun/travelexec/download.png)](http://gobuild.io/github.com/shxsun/travelexec)
 
 This is tool is for qa-test. It find all test files and execute it, Judge a case is ok depends on if the exitcode eq 0.
 
