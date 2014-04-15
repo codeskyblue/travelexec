@@ -1,19 +1,20 @@
 ## travelexec
-This is command tool for program test. He will help you travel the directories and find all files and execute specified command.
+This is command tool for program test. It will help you **travel** the directories and find all files and **exec**ute specified command.
 
-So I called it `travelexec`.
+So I call it `travelexec`.
 
-This program is write by golang. To got the command tool, need to install golang development before. (**Only tested in linux**)
+This program is write by golang. To get the command tool, you need to install golang development before. (**Only tested in linux**)
 
 ### How to install
-1. install golang(skip it if already exists), see how to install: <http://golang.org/doc/install>
+1. install golang*(skip it if already exists)*, see how to install: <http://golang.org/doc/install>
 2. run `go get github.com/codeskyblue/travelexec`
 
 ### QuickStart
-for example, there are 2 test file in the current directory.
+for example, there are three files in the current directory.
 
  	test_a.py
 	test_b.py
+        lib.py
   
 run through
 
