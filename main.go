@@ -23,12 +23,13 @@ import (
 
 var quitProgram = false
 
-func renderTemplate(filename string, tmplFile string, data interface{}) (err error) {
-	tmpl, err := template.ParseFiles(tmplFile)
+func renderTemplateFile(outfile string, tmplText string, data interface{}) (err error) {
+	//tmpl, err := template.ParseFiles(tmplFile)
+	tmpl, err := template.New("render").Parse(tmplText)
 	if err != nil {
 		return
 	}
-	fd, err := os.Create(filename)
+	fd, err := os.Create(outfile)
 	if err != nil {
 		return err
 	}
@@ -50,11 +51,12 @@ func renderWithDefault(tmplFile string, defaultTmpl []byte, data interface{}) (o
 	return string(buf.Bytes()), err
 }
 
-func renderFileWithDefault(filename string, tmplFile string, defaultTmpl []byte, data interface{}) (err error) {
-	if !fileExists(tmplFile) {
-		ioutil.WriteFile(tmplFile, defaultTmpl, 0644)
-	}
-	return renderTemplate(filename, tmplFile, data)
+func renderFile(outfile string, defaultTmpl []byte, data interface{}) (err error) {
+	//if !fileExists(tmplFile) {
+	//	ioutil.WriteFile(tmplFile, defaultTmpl, 0644)
+	//}
+	// ignore: tmplFile
+	return renderTemplateFile(outfile, string(defaultTmpl), data)
 }
 
 func dumpFile(filename string, data interface{}) (err error) {
@@ -147,8 +149,8 @@ var mycnf = &GlobalConfig{
 }
 
 func init() {
-	if fileExists(".travel.yml") {
-		loadFile(".travel.yml", mycnf)
+	if fileExists(CONFIG_FILE) {
+		loadFile(CONFIG_FILE, mycnf)
 	}
 	args, err := flags.Parse(mycnf)
 	_, _ = args, err
@@ -159,7 +161,7 @@ func init() {
 		log.Fatal(err)
 	}
 	if mycnf.InitYaml {
-		dumpFile(".travel.yml", mycnf)
+		dumpFile(CONFIG_FILE, mycnf)
 		os.Exit(0)
 	}
 	if mycnf.Version {
@@ -289,7 +291,7 @@ func selfPath() string {
 	return filepath.Dir(os.Args[0])
 }
 
-const STATE_FILE = ".run-state.yml"
+const STATE_FILE = "state-travel.yml"
 const CONFIG_FILE = ".travel.yml"
 
 var cfgTree = map[string]*GlobalConfig{}
@@ -349,8 +351,8 @@ func main() {
 	data["Total"] = len(taskcfg.Files)
 	data["FailCount"] = errCnt
 
-	htmlTmplPath := filepath.Join(selfPath(), ".html.tmpl")
-	err = renderFileWithDefault(mycnf.Result, htmlTmplPath, defaultTemplate, data)
+	//htmlTmplPath := filepath.Join(selfPath(), ".html.tmpl")
+	err = renderTemplateFile(mycnf.Result, defaultTemplate, data)
 	if err != nil {
 		log.Fatal(err)
 	}

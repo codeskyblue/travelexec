@@ -1,5 +1,5 @@
 ## travelexec
-This is command tool for program test. It will help you **travel** the directories and find all files and **exec**ute specified command.
+This is command tool for program test. It will help you **travel** the directories and find all files and **execute** specified command.
 
 So I call it `travelexec`.
 
@@ -27,26 +27,26 @@ for example, there are three files in the current directory.
 
  	test_a.py
 	test_b.py
-        lib.py
+	lib.py
   
 run through
 
-        travelexec -I '^test_.*\.py$' -c 'python {}'
+	travelexec -I '^test_.*\.py$' -c 'python {}'
 
 use regex `^test_.*\.py$` to find files. `{}` will be replaced as filename. The result is same as
 
-        python test_a.py
-        python test_b.py
+	python test_a.py
+	python test_b.py
 
 ### config file support
 with config file, you don't need to prepare parameters for command.
 
 first, generete a sample config file. default config file is `.travel.yml`
 
-        travelexec --init
+	travelexec --init
   
 ### how to run last failed files.
-        travelexec --reload
+	travelexec --reload
 
 ### integerate with jenkins
 add such command into **Execute Shell**

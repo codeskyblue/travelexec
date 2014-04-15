@@ -5,7 +5,7 @@ var defaultSMSTemplate = []byte(`summary
 - host: {{.Host}}
 - time: {{.TimeCost}}`)
 
-var defaultTemplate = []byte(`<!DOCTYPE html>
+var defaultTemplate = `<!DOCTYPE html>
 <html>
 	<head>
         <meta charset="utf-8" />
@@ -92,10 +92,6 @@ var defaultTemplate = []byte(`<!DOCTYPE html>
 			});
 		});
 		</script>
-		<script type="text/javascript">
-			var _bdhmProtocol = (("https:" == document.location.protocol) ? " https://" : " http://");
-			document.write(unescape("%3Cscript src='" + _bdhmProtocol + "hm.baidu.com/h.js%3F16e2db098074d5cd3d1de938886dddbc' type='text/javascript'%3E%3C/script%3E"));
-		</script>
 	</body>
 </html>
-`)
+`

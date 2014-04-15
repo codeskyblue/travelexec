@@ -9,4 +9,4 @@ package main
 	0.6 send html to platform support
 	0.7 catch sigint (Ctrl+C)
 */
-const VERSION = "0.7"
+const VERSION = "0.1.0415"
