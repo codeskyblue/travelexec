@@ -1,45 +1,38 @@
 ## travelexec
+This is command tool for program test. He will help you travel the directories and find all files and execute specified command.
 
-This is tool is for qa-test. It find all test files and execute it, Judge a case is ok depends on if the exitcode eq 0.
+So I called it `travelexec`.
 
-(golang binary bool) travel file tree and call exec (like find + xargs, but offers more functions)
+This program is write by golang. To got the command tool, need to install golang development before. (**Only tested in linux**)
 
-Only tested on linux.
+### How to install
+1. install golang(skip it if already exists), see how to install: <http://golang.org/doc/install>
+2. run `go get github.com/codeskyblue/travelexec`
 
-## How to use
-first download binary file(through gobuild.io) to you system, and add it to your $PATH
-
-for example, there are 2 test file need to run.
+### QuickStart
+for example, there are 2 test file in the current directory.
 
  	test_a.py
 	test_b.py
   
-There are two thing we need to case about.
+run through
 
-1. find out which file to run
-2. specify how to run this test file
+        travelexec -I '^test_.*\.py$' -c 'python {}'
 
-travelexec use regext to match files.
+use regex `^test_.*\.py$` to find files. `{}` will be replaced as filename. The result is same as
 
-	travelexec -I '^test_.*\.py$' -c 'python {}'
-  
-travelexec will filter out files which basename match `^test_.*\.py$`, before call shell, filename will replace `{}`
-
-so, the following command will be executed.
-
-	python test_a.py
-	python test_b.py
-
-result will be saved into test.html.
+        python test_a.py
+        python test_b.py
 
 ### config file support
-  travelexec -I '^test_.*\.py$' -c 'python {}' --init
-  
-after you run this command, a conf file `.travel.yml` will be generated. Next time, you just need to run `travelexec`, that is very helpful to save old settings.
+with config file, you don't need to prepare parameters for command.
 
-	travelexec --reload
+first, generete a sample config file. default config file is `.travel.yml`
+
+        travelexec --init
   
-this command will only run last failed test cases.
+### how to run last failed files.
+        travelexec --reload
 
 ### integerate with jenkins
 add such command into **Execute Shell**
