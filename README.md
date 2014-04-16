@@ -7,7 +7,7 @@ This program is write by golang(Require go version>=1.2). To get the command too
 
 Current Version: v0.1.0415
 
-see changelog [HERE](CHANGELOG.md)
+see changelog [HERE](https://github.com/codeskyblue/travelexec/blob/master/version.go)
 
 FEATURES:
 
