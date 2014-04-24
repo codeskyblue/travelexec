@@ -123,11 +123,12 @@ type GlobalConfig struct {
 	Replacer string `yaml:"-"` //short:"i" description:"replacer"`
 	Command  string `short:"c" description:"specify how to process each file"`
 	Include  string `short:"I" long:"include-regex" description:"regex set which file can be included"`
+	MaxFail  int    `long:"max-fail" description:"max failed case"`
 	Path     string `short:"p" long:"path" description:"path for search"`
 	Depth    int    `short:"d" long:"depth" description:"depth to travel directory tree"`
 	Verbose  bool   `short:"v" long:"verbose" description:"show verbose output"`
 	Timeout  string `short:"t" long:"timeout" description:"timeout for each exec"`
-	Reload   bool   `short:"r" long:"reload" description:"reload all failed cmd, run again:"`
+	Reload   bool   `short:"r" long:"failed" description:"reload all failed cmd, run again:"`
 	Exclude  string `yaml:"-"`
 
 	Version  bool     `yaml:"-"`
@@ -218,6 +219,7 @@ func groupKill(cmd *exec.Cmd) (err error) {
 
 func work(cfg *TaskConfig) (results []TaskResult) {
 	var err error
+	var failcnt = 0
 	results = []TaskResult{}
 	for i, file := range cfg.Files {
 		start := time.Now()
@@ -227,8 +229,11 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 		}
 		c := strings.Replace(cfg.Command, cfg.Replacer, file, -1)
 		r.Command = c
+		if mycnf.MaxFail != 0 && failcnt >= mycnf.MaxFail {
+			quitProgram = true
+		}
 		if quitProgram {
-			r.Error = errors.New("not started, skiped for SIGINT interrupt")
+			r.Error = errors.New("skip test")
 			results = append(results, r)
 			break
 		}
@@ -270,6 +275,7 @@ func work(cfg *TaskConfig) (results []TaskResult) {
 
 		if err != nil {
 			r.Error = err
+			failcnt += 1
 			fmt.Printf(format, fmt.Sprintf("\033[33m"+"err: %s"+"\033[0m", err))
 		} else {
 			fmt.Printf(format, "\033[32m"+"success"+"\033[0m")
