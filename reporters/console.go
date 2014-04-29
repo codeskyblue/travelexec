@@ -1,4 +1,4 @@
-package reportes
+package reporters
 
 import (
 	"fmt"
